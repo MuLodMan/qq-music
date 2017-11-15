@@ -40,7 +40,7 @@ export class MusicPlayer {
   }
 
   onPlay(event) {
-    if (this.fetching) return
+    if (this.fetching||!this.songid) return
     this.$audio.play()
     this.lyrics.start()
     this.progress.start()
