@@ -1,10 +1,11 @@
 .navbar {
-  background: #fff;
+  background:rgba(43, 184, 66, 0.384);
   .nav-list {
     display: flex;
     align-items: center;
     .nav-item {
-      flex: 1;
+      font-size: .25rem;
+      flex: 8;
       cursor: pointer;
       position: relative;
       text-align: center;
@@ -24,6 +25,64 @@
         height: 2px;
         background: @nav-item-active
       }
+    }
+    .menu{
+      // border: 1px solid red;
+      flex:3;
+      height: @nav-item-height;
+      float: left;
+      position: relative;
+      div{
+        height: 2px;
+        width: 80%;
+        background: white;
+        position: absolute;
+        transform: translate(20%,-50%);
+       
+        &:nth-child(1){
+          top: 30%;
+        }
+        &:nth-child(2){
+          top: 50%;
+        }
+        &:nth-child(3){
+          top: 70%;
+        }
+      }
+      
+  }
+  .addon{
+    margin-right: 10px;
+    flex:2;
+    float: left;
+    position: relative;
+    height:30px;;
+    >div:first-child{
+      width: 26px;
+      height: 2px;
+      background: white;
+      position: absolute;
+      top: 50%;
+      left: 2px;
+    }
+    >div:last-child{
+      width: 2.5px;
+      height: 26px;
+      background: white;
+      position: absolute;
+      left: 14px;
+      top: 3px;
+    }
+
+  }
+  }
+  .search{
+    >input{
+      width: 98%;
+      margin: 2px 1%;
+      text-align: center;
+      background-color: white;
+      border: 0px;
     }
   }
 }

@@ -1,0 +1,139 @@
+.MusicHall{
+.carousel{
+    position: relative;
+    width: 100%;
+    height: 206px;
+    overflow: hidden;
+li {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+}
+ .img-ct {
+    position: absolute;
+    width:100%;
+    height: 100%;
+}
+ .img-ct a {
+    display: block;
+    width:100%;
+    height: 100%
+}
+ .img-ct img {
+    width: 100%;
+    height: 206px;
+}
+
+ .img-ct:after {
+    content: ' ';
+    display: block;
+    clear: both;
+}
+
+ .img-ct li {
+    width: 100%;
+    position: absolute;
+    opacity: 0;
+    transition: opacity 0.8s;
+    z-index: 0;
+}
+
+ .img-ct li.active {
+    opacity: 1;
+    z-index: 1;
+}
+
+.arrow {
+    position: absolute;
+    top: 50%;
+    margin-top: -15px;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    background: #4E443C;
+    color: #fff;
+    border-radius: 30px;
+    box-shadow: 0 0 2px #999;
+    opacity: 0.8
+}
+
+.arrow:hover {
+    opacity: 1;
+}
+
+ul.bullet {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+ul.bullet li {
+    width: 16px;
+    height: 4px;
+    border-radius: 2px;
+    background: #fff;
+    display: inline-block;
+    cursor: pointer;
+    margin-right: 3px;
+}
+
+ul.bullet li.active {
+    background: #666;
+}
+}
+   .musicList{
+       font-size: .15rem;
+       display: flex;
+       flex-wrap: wrap;
+       justify-content: space-between;
+       li{
+           width: 30%;
+           height: 20vw;
+       }
+   }   
+   .broadCast{
+    .title{
+    font-size: .35rem;
+    }
+       .content{
+       display: flex;
+       flex-wrap: nowrap;
+       justify-content: space-between;
+       .list-media{
+           width: 48%;
+           img{
+               border: 1px solid red;
+               width: 100%;
+           }
+       }
+    }
+   }
+   .hotSongList
+   {
+    &>.title{
+        font-size: .35rem;
+    }
+    &>.content{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    >.list-item{
+        width: 48%;
+        >.list-media{
+            width: 100%;
+            height: 150px;
+            border:1px solid red;
+            >img{
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+}  
+}
+}

@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -81,6 +81,72 @@ var HotSearch_URL = exports.HotSearch_URL = 'http://localhost:4000/mostSearch';
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var silder = function () {
+  function silder() {
+    _classCallCheck(this, silder);
+
+    var $ = document.querySelector.bind(document);
+    this.$slider = $('.slider');
+    this.startX = 0;
+    this.MoveX = 0;
+    this.baseX = 0;
+    this.addEvents();
+  }
+
+  _createClass(silder, [{
+    key: 'addEvents',
+    value: function addEvents() {
+      this.$slider.addEventListener('touchmove', this.TouchHandler.bind(this));
+      this.$slider.addEventListener('touchstart', this.TouchHandler.bind(this));
+      this.$slider.addEventListener('touchend', this.TouchHandler.bind(this));
+    }
+  }, {
+    key: 'TouchHandler',
+    value: function TouchHandler(event) {
+      var _this = this;
+      function MoveTarget() {
+        console.log('this slider left ' + _this.$slider.style.left + ' _this.MoveX ' + _this.MoveX + '_this.startX ' + _this.startX);
+        _this.$slider.style.left = (_this.baseX + _this.MoveX - _this.startX > 0 ? 0 : _this.baseX + _this.MoveX - _this.startX) + 'px'; //limit right margin
+      }
+      switch (event.type) {
+        case "touchstart":
+          this.startX = event.touches[0].clientX;
+          return;
+        case "touchmove":
+          this.MoveX = event.touches[0].clientX;
+          MoveTarget();
+          return;
+        case "touchend":
+          this.baseX = parseInt(this.$slider.style.left);
+          if (-parseInt(this.$slider.style.left) > this.$slider.clientWidth / 2) {
+            this.$slider.style.left = '-' + window.getComputedStyle(this.$slider).width;
+            this.baseX = 0;
+          }
+          return;
+      }
+    }
+  }]);
+
+  return silder;
+}();
+
+exports.default = silder;
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -115,7 +181,7 @@ function searchUrl(keyword) {
 }
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -182,13 +248,11 @@ function loadImage(img, callback) {
 }
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-
-__webpack_require__(4);
 
 var _search = __webpack_require__(5);
 
@@ -196,31 +260,66 @@ var _toplist = __webpack_require__(6);
 
 var _recommend = __webpack_require__(7);
 
-var _music_player = __webpack_require__(9);
+var _music_player = __webpack_require__(8);
 
-__webpack_require__(12);
+var _MusicHall = __webpack_require__(11);
 
-var search = new _search.Search(document.querySelector('#search-view'));
-var hotsearch = new _search.hotSearch();
-var player = new _music_player.MusicPlayer(document.querySelector('#player'));
-var toplist = new _toplist.TopList(document.querySelector('#rank-view')).launch();
-var recommend = new _recommend.Recommend(document.querySelector('#rec-view')).launch();
-if (hotsearch.listHtml.hasChildNodes()) {
-  hotsearch.listHtml.addEventListener('click', function (e) {
-    search.$input.value = e.target.textContent;
-    search.$input.dispatchEvent(new Event('keyup'));
+var _slider = __webpack_require__(1);
+
+var _slider2 = _interopRequireDefault(_slider);
+
+__webpack_require__(13);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+//initialize
+var wraperHead = document.querySelector(".wraper-Head"),
+    search = new _search.Search(wraperHead),
+    tabSwith = document.querySelector('.navbar>.nav-list'),
+    musiclist = new _MusicHall.MusicList(),
+    slider = new _slider2.default(),
+    scrollLock = false,
+    player = new _music_player.MusicPlayer(document.querySelector('#player')),
+    c = new _MusicHall.Carousel();
+new _MusicHall.broadCasting();
+slider.$slider.style.left = -slider.$slider.clientWidth + 'px';
+tabSwith.addEventListener('click', function (event) {
+  var target = event.target,
+      content = document.querySelector(target.dataset.view);
+  if (target.dataset.view === '.slider') {
+    slider.$slider.style.left = 0;
+    return;
+  }
+  Array.prototype.forEach.call(target.parentElement.children, function (tab) {
+    tab.classList.remove('active');
   });
-}
-
-document.querySelector('.show-player').addEventListener('click', function () {
-  player.show();
+  target.classList.add('active');
+  if (content) {
+    Array.prototype.forEach.call(content.parentElement.children, function (child) {
+      child.style.display = 'none';
+    });
+    content.style.display = 'block';
+    if (target.dataset.view !== ".MusicHall") {
+      c.isAnimate = false;
+      for (var idx in c.$items) {
+        if (idx === 'length') break;
+        if (c.$items[idx].classList.contains('active')) {
+          c.curIdx = parseInt(idx);
+        }
+      }
+      c.stopAuto();
+    } else {
+      c.autoPlay();
+    }
+  }
 });
-search.$input.addEventListener('keyup', function (e) {
-  var keyword = event.target.value.trim();
-  if (keyword) hotsearch.listHtml.style.display = "none";else hotsearch.listHtml.style.display = "block";
-  search.onKeyUp.call(search, e);
+tabSwith.children[2].dispatchEvent(new Event('click', { bubbles: true }));
+search.$input.addEventListener('change', function (event) {
+  scrollLock = search.onChanged(event);
 });
-onHashChange();
+window.onscroll = function (event) {
+  if (scrollLock) window.scroll(0, 0);else musiclist.scrollHandler();
+};
 addEventListener('hashchange', onHashChange);
 function onHashChange() {
   var hash = location.hash;
@@ -238,38 +337,6 @@ function onHashChange() {
 }
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var tabSwith = document.querySelector('.navbar>.nav-list');
-tabSwith.addEventListener('click', function (event) {
-
-  var target = event.target;
-
-  if (target.dataset.role !== 'tab') return;
-
-  [].forEach.call(target.parentElement.children, function (tab) {
-    tab.classList.remove('active');
-  });
-  target.classList.add('active');
-
-  var content = document.querySelector(target.dataset.view);
-
-  if (content) {
-    [].forEach.call(content.parentElement.children, function (child) {
-      child.style.display = 'none';
-    });
-    content.style.display = 'block';
-  }
-  if (target.dataset.view === "#search-view") return;
-  window.dispatchEvent(new Event('scroll'));
-});
-tabSwith.firstElementChild.dispatchEvent(new Event('click', { bubbles: true }));
-
-/***/ }),
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -279,11 +346,11 @@ tabSwith.firstElementChild.dispatchEvent(new Event('click', { bubbles: true }));
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.hotSearch = exports.Search = undefined;
+exports.Search = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _helpers = __webpack_require__(1);
+var _helpers = __webpack_require__(2);
 
 var _constants = __webpack_require__(0);
 
@@ -294,7 +361,7 @@ var Search = function () {
     _classCallCheck(this, Search);
 
     this.$el = el;
-    this.$input = this.$el.querySelector('#search');
+    this.$input = document.getElementById('search');
     this.$songs = this.$el.querySelector('.song-list');
     this.page = 1;
     this.songs = {};
@@ -302,23 +369,25 @@ var Search = function () {
     this.perpage = 20;
     this.nomore = false;
     this.fetching = false;
-    this.onscroll = this.onScroll.bind(this);
-    window.addEventListener('scroll', this.onscroll);
+    this.$el.addEventListener('scroll', this.onScroll.bind(this));
   }
 
   _createClass(Search, [{
-    key: 'onKeyUp',
-    value: function onKeyUp(event) {
+    key: 'onChanged',
+    value: function onChanged(event) {
       var keyword = event.target.value.trim(),
           searchInput = document.querySelector('.result_tags');
       if (!keyword) return this.reset();
       this.search(keyword);
+      return true;
     }
   }, {
     key: 'onScroll',
     value: function onScroll(event) {
-      if (this.nomore) return window.removeEventListener('scroll', this.onscroll);
-      if (pageYOffset + document.documentElement.clientHeight > document.body.scrollHeight - 50) {
+      event.stopPropagation();
+      if (!this.keyword) return;
+      if (this.nomore) return this.$el.removeEventListener('scroll', this.onScroll);
+      if (getComputedStyle(this.$songs.lastElementChild).paddingTop < getComputedStyle(this.$songs).height) {
         this.search(this.keyword, this.page + 1);
       }
     }
@@ -330,6 +399,7 @@ var Search = function () {
       this.keyword = '';
       this.nomore = false;
       this.$songs.innerHTML = '';
+      return false;
     }
   }, {
     key: 'search',
@@ -365,7 +435,7 @@ var Search = function () {
         }).join(' ');
         return '\n        <a class="song-item"\n           href="#player?artist=' + artist + '&songid=' + song.songid + '&songname=' + song.songname + '&albummid=' + song.albummid + '&duration=' + song.interval + '">\n          <i class="icon icon-music"></i>\n          <div class="song-name ellipsis">' + song.songname + '</div>\n          <div class="song-artist ellipsis">' + artist + '</div>\n        </a>';
       }).join('');
-      this.$songs.insertAdjacentHTML('beforeend', html);
+      this.$songs.innerHTML += html;
     }
   }, {
     key: 'loading',
@@ -390,39 +460,31 @@ var Search = function () {
 
   return Search;
 }();
+// class hotSearch{
+//   constructor(){
+//     this.listHtml = document.querySelector('.result_tags')
+//     this.getResult()
+//   }
+//   getResult(){
+//     let req = new XMLHttpRequest()
+//     let that =this;
+//     req.open('get',HotSearch_URL)
+//     req.send()
+//     req.addEventListener("load",function(e){
+//       // console.log(e)
+//      let results = JSON.parse(e.target.response)
+//      console.log(results)
+//      let htmlTemp = results.data.hotkey.map(function(e){
+//         return `<a href="javascript:;" class="js_keyword tag_s">${e.k} </a>`
+//      }).join('')
+//      that.listHtml.innerHTML = htmlTemp;
+//     })
+//   }
 
-var hotSearch = function () {
-  function hotSearch() {
-    _classCallCheck(this, hotSearch);
+// }
 
-    this.listHtml = document.querySelector('.result_tags');
-    this.getResult();
-  }
-
-  _createClass(hotSearch, [{
-    key: 'getResult',
-    value: function getResult() {
-      var req = new XMLHttpRequest();
-      var that = this;
-      req.open('get', _constants.HotSearch_URL);
-      req.send();
-      req.addEventListener("load", function (e) {
-        // console.log(e)
-        var results = JSON.parse(e.target.response);
-        console.log(results);
-        var htmlTemp = results.data.hotkey.map(function (e) {
-          return '<a href="javascript:;" class="js_keyword tag_s">' + e.k + ' </a>';
-        }).join('');
-        that.listHtml.innerHTML = htmlTemp;
-      });
-    }
-  }]);
-
-  return hotSearch;
-}();
 
 exports.Search = Search;
-exports.hotSearch = hotSearch;
 
 /***/ }),
 /* 6 */
@@ -438,7 +500,7 @@ exports.TopList = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _lazyload = __webpack_require__(2);
+var _lazyload = __webpack_require__(3);
 
 var _constants = __webpack_require__(0);
 
@@ -502,9 +564,9 @@ exports.Recommend = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _slider = __webpack_require__(8);
+var _slider = __webpack_require__(1);
 
-var _lazyload = __webpack_require__(2);
+var _lazyload = __webpack_require__(3);
 
 var _constants = __webpack_require__(0);
 
@@ -581,79 +643,56 @@ var Recommend = exports.Recommend = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Slider = exports.Slider = function () {
-  function Slider() {
-    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-    _classCallCheck(this, Slider);
-
-    this.$el = options.el;
-    this.slides = options.slides;
-    this.interval = options.interval || 3000;
-    this.duration = options.duration || 300;
-    this.index = 0;
-    this.render();
-    this.start();
-  }
-
-  _createClass(Slider, [{
-    key: 'render',
-    value: function render() {
-      this.$el.innerHTML = '<div class="qq-slider-wrap"></div>';
-      this.$wrap = this.$el.firstElementChild;
-      this.$wrap.style.transitionDuration = this.duration + 'ms';
-      this.$wrap.style.width = this.slides.length * 100 + '%';
-      this.$wrap.innerHTML = this.slides.map(function (slide) {
-        return '<div class="qq-slider-item">\n          <a href="' + slide.link + '">\n            <img src="' + slide.image + '">\n          </a>\n      </div>';
-      }).join('');
-    }
-  }, {
-    key: 'start',
-    value: function start() {
-      setInterval(this.next.bind(this), this.interval);
-    }
-  }, {
-    key: 'next',
-    value: function next() {
-      this.index += 1;
-      if (this.index === this.slides.length) {
-        this.$wrap.style.transform = 'translate(0)';
-        this.index = 0;
-        return;
-      }
-      this.$wrap.style.transform = 'translate(-' + this.index * 100 / this.slides.length + '%)';
-    }
-  }]);
-
-  return Slider;
-}();
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 exports.MusicPlayer = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _progress_bar = __webpack_require__(10);
+var _progress_bar = __webpack_require__(9);
 
-var _lyrics_player = __webpack_require__(11);
+var _lyrics_player = __webpack_require__(10);
 
-var _helpers = __webpack_require__(1);
+var _helpers = __webpack_require__(2);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MiniPlayer = function () {
+  function MiniPlayer(el) {
+    _classCallCheck(this, MiniPlayer);
+
+    this.$el = el;
+  }
+
+  _createClass(MiniPlayer, [{
+    key: 'showMessage',
+    value: function showMessage(imgUrl, Title) {
+      this.$el.querySelector('.songimg').style.background = 'url(' + imgUrl + ') 0/cover';
+      this.$el.querySelector('.song-message>.songtitle').textContent = Title;
+    }
+  }, {
+    key: 'PlayerHandler',
+    value: function PlayerHandler(e) {
+      switch (e.target.className) {
+        case "icon-action icon-play":
+          if (!this.$el.querySelector('.icon-action.icon-play')) return;
+          this.$el.querySelector('.icon-action.icon-play').classList.replace('icon-play', 'icon-pause');
+          this.showlyrics();
+          break;
+        case "icon-action icon-pause":
+          this.$el.querySelector('.icon-action.icon-pause').classList.replace('icon-pause', 'icon-play');
+          this.showlyrics();
+          break;
+        case "songList":
+          break;
+        default:
+      }
+    }
+  }, {
+    key: 'showlyrics',
+    value: function showlyrics() {}
+  }]);
+
+  return MiniPlayer;
+}();
 
 var MusicPlayer = exports.MusicPlayer = function () {
   function MusicPlayer(el) {
@@ -665,6 +704,10 @@ var MusicPlayer = exports.MusicPlayer = function () {
     this.lyrics = new _lyrics_player.LyricsPlayer(this.$el.querySelector('.player-lyrics'), this.$audio);
     this.progress = new _progress_bar.ProgressBar(this.$el.querySelector('.progress'));
     this.fetching = false;
+    this.miniPlayer = new MiniPlayer(document.querySelector('.miniPlayer'));
+    var miniSelector = this.miniPlayer.$el.querySelector.bind(this.miniPlayer.$el);
+    miniSelector('.songimg').onclick = this.show.bind(this);
+    miniSelector('.icon-action').onclick = this.onOff.bind(this);
   }
 
   _createClass(MusicPlayer, [{
@@ -705,6 +748,7 @@ var MusicPlayer = exports.MusicPlayer = function () {
       this.$audio.play();
       this.lyrics.start();
       this.progress.start();
+      this.miniPlayer.PlayerHandler(event);
       event.target.classList.add('icon-pause');
       event.target.classList.remove('icon-play');
     }
@@ -714,6 +758,7 @@ var MusicPlayer = exports.MusicPlayer = function () {
       this.$audio.pause();
       this.lyrics.pause();
       this.progress.pause();
+      this.miniPlayer.PlayerHandler(event);
       event.target.classList.add('icon-play');
       event.target.classList.remove('icon-pause');
     }
@@ -736,15 +781,14 @@ var MusicPlayer = exports.MusicPlayer = function () {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       if (!options) return;
-
-      this.$el.querySelector('.song-name').innerText = options.songname;
-      this.$el.querySelector('.song-artist').innerText = options.artist;
+      var coverUrl = (0, _helpers.albumCoverUrl)(options.albummid),
+          artist = options.artist;
+      this.$el.querySelector('.song-name').textContent = options.songname;
+      this.$el.querySelector('.song-artist').textContent = artist;
       this.progress.reset(options.duration);
-
-      var coverUrl = (0, _helpers.albumCoverUrl)(options.albummid);
       this.$el.querySelector('.album-cover').src = coverUrl;
       this.$el.querySelector('.player-background').style.backgroundImage = 'url(' + coverUrl + ')';
-
+      this.miniPlayer.showMessage(coverUrl, artist);
       if (options.songid) {
         if (this.songid !== options.songid) {
           this.$el.querySelector('.icon-action').className = 'icon-action icon-play';
@@ -784,7 +828,7 @@ var MusicPlayer = exports.MusicPlayer = function () {
 }();
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -874,7 +918,7 @@ var ProgressBar = exports.ProgressBar = function () {
 }();
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1000,13 +1044,206 @@ var LyricsPlayer = exports.LyricsPlayer = function () {
 LyricsPlayer.prototype.LINE_HEIGHT = 42;
 
 /***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.MusicList = exports.broadCasting = exports.Carousel = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _CurFetch = __webpack_require__(12);
+
+var _CurFetch2 = _interopRequireDefault(_CurFetch);
+
+var _slider = __webpack_require__(1);
+
+var _slider2 = _interopRequireDefault(_slider);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var $ = document.querySelector.bind(document);
+
+var Carousel = function () {
+    function Carousel() {
+        var _this = this;
+
+        _classCallCheck(this, Carousel);
+
+        var $ct = $('.img-ct'),
+            template = '',
+            bulletTemplete = '';
+        this.$bullet = $('.bullet');
+        this.fetch = false;
+        this.imgCount = 0;
+        this.$items = []; //HTMLCollection
+        this.curIdx = 0;
+        this.clock;
+        this.isAnimate = false;
+        this.isfetch = false;
+        _CurFetch2.default.then(function (res) {
+            var slider = res.data.slider || [];
+            for (var i = 0; i < slider.length; i++) {
+                template += '\n                <li>\n                    <a href="' + slider[i].linkUrl + '">\n                        <img src="' + slider[i].picUrl + '">\n                    </a>\n                </li>';
+                bulletTemplete += '<li data-num=' + i + '></li>';
+            }
+            $ct.innerHTML = template;
+            _this.$bullet.innerHTML = bulletTemplete;
+            $ct.firstElementChild.classList.add('active');
+            _this.$bullet.firstElementChild.classList.add('active');
+            _this.imgCount = $ct.children.length;
+            _this.$items = $ct.children;
+            _this.isfetch = true;
+        });
+    }
+
+    _createClass(Carousel, [{
+        key: 'playNext',
+        value: function playNext() {
+            this.play((this.curIdx + 1) % this.imgCount);
+        }
+    }, {
+        key: 'playPre',
+        value: function playPre() {
+            this.play((imgCount + this.curIdx - 1) % this.imgCount);
+        }
+    }, {
+        key: 'play',
+        value: function play(idx) {
+            var _this2 = this;
+
+            if (this.isAnimate) return;
+            this.isAnimate = true;
+            this.$items[this.curIdx].classList.remove('active');
+            this.$items[idx].classList.add('active');
+            this.setBullet(idx);
+            var addP = new Promise(function (res, rej) {
+                _this2.$items[idx].addEventListener('transitionend', function () {
+                    res();
+                });
+            });
+            var remP = new Promise(function (res, rej) {
+                _this2.$items[_this2.curIdx].addEventListener('transitionend', function () {
+                    res();
+                });
+            });
+            Promise.all([addP, remP]).then(function () {
+                _this2.isAnimate = false;
+                _this2.curIdx = idx;
+            });
+        }
+    }, {
+        key: 'setBullet',
+        value: function setBullet(idx) {
+            Array.prototype.forEach.call(this.$bullet.children, function (ele) {
+                ele.classList.remove('active');
+            });
+            this.$bullet.children[idx].classList.add('active');
+        }
+    }, {
+        key: 'stopAuto',
+        value: function stopAuto() {
+            clearInterval(this.clock);
+        }
+    }, {
+        key: 'autoPlay',
+        value: function autoPlay() {
+            var _this3 = this;
+
+            this.clock = setInterval(function () {
+                if (_this3.isfetch === true) _this3.playNext();
+            }, 2000);
+        }
+    }]);
+
+    return Carousel;
+}();
+
+var broadCasting = function broadCasting() {
+    var _this4 = this;
+
+    _classCallCheck(this, broadCasting);
+
+    //temple
+    var picUrl = ['https://y.gtimg.cn/music/photo/radio/track_radio_307_13_1.jpg?max_age=2592000', 'https://y.gtimg.cn/music/photo/radio/track_radio_199_13_1.jpg?max_age=2592000'];
+    this.$broadCast = $('.broadCast>.content');
+    _CurFetch2.default.then(function (res) {
+        var template = '',
+            radioList = res.data.radioList;
+        for (var i = 0; i < radioList.length; i++) {
+            template += '<div class="list-media" data-radioId="' + radioList[i].radioid + '">\n            <img class="" src="' + picUrl[i] + '">\n            <span class="icon icon-play"></span>\n            <div class="list-detail">\n            <h3 class="list-title">' + radioList[i].Ftitle + '</h3>\n            </div>\n          </div>';
+        }_this4.$broadCast.innerHTML = template;
+    });
+};
+
+var MusicList = function MusicList() {
+    var _this5 = this;
+
+    _classCallCheck(this, MusicList);
+
+    var template = '',
+        $hotSongList = $('.hotSongList>.content');
+    this.scrollHandler = function () {
+        $hotSongList.innerHTML = "<div>Now Loading....</div>";
+    };
+    _CurFetch2.default.then(function (res) {
+        var songList = res.data.songList;
+        for (var i = 0; i < songList.length; i++) {
+            template += '<div class="list-item">\n            <div class="list-media">\n              <img class="" data-src="' + songList[i].picUrl + '">\n              <span class="icon icon-play"></span>\n            </div>\n            <div class="list-detail">\n              <h3 class="list-title">' + songList[i].songListDesc + '</h3>\n              <div class="list-text"></div>\n            </div>\n          </div>';
+        }
+        $hotSongList.innerHTML = template;
+        _this5.scrollHandler = function () {
+            var listItem = $hotSongList.children;
+            Array.prototype.forEach.call(listItem, function (item) {
+                item.getBoundingClientRect().top < window.innerHeight;
+                item.querySelector('img').src = item.querySelector('img').dataset.src;
+            });
+        };
+    });
+};
+
+exports.Carousel = Carousel;
+exports.broadCasting = broadCasting;
+exports.MusicList = MusicList;
+
+/***/ }),
 /* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+        value: true
+});
+
+var _constants = __webpack_require__(0);
+
+function CurFetch(res, rej) {
+        var httpreq = new XMLHttpRequest();
+        httpreq.open('GET', _constants.RECOMMEND_URL);
+        httpreq.send();
+        httpreq.onload = function (e) {
+                res(JSON.parse(e.target.response));
+        };
+}
+exports.default = new Promise(CurFetch);
+
+/***/ }),
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(13);
+var content = __webpack_require__(14);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // Prepare cssTransformation
 var transform;
@@ -1014,7 +1251,7 @@ var transform;
 var options = {"hmr":true}
 options.transform = transform
 // add the styles to the DOM
-var update = __webpack_require__(15)(content, options);
+var update = __webpack_require__(16)(content, options);
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -1031,21 +1268,21 @@ if(false) {
 }
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(14)(undefined);
+exports = module.exports = __webpack_require__(15)(undefined);
 // imports
 
 
 // module
-exports.push([module.i, "* {\n  box-sizing: border-box;\n}\nbody {\n  margin: 0;\n}\nh1,\nh2,\nh3 {\n  margin: 0;\n  font-weight: normal;\n}\nul,\nol {\n  margin: 0;\n  padding: 0;\n  list-style: none;\n}\na {\n  text-decoration: none;\n}\ni {\n  font-style: normal;\n}\n#header {\n  display: flex;\n  align-items: center;\n  height: 44px;\n  background: #31c27c;\n}\n#header h1 {\n  display: none;\n}\n#header #logo {\n  height: 25px;\n  margin-left: 10px;\n}\n#header .show-player {\n  position: absolute;\n  display: inline-block;\n  right: 10px;\n  top: 8px;\n  height: 28px;\n  padding: 0 12px;\n  line-height: 28px;\n  border-radius: 99px;\n  font-size: 14px;\n  background: #149c5a;\n  color: #fff;\n}\n.navbar {\n  background: #fff;\n}\n.navbar .nav-list {\n  display: flex;\n  align-items: center;\n}\n.navbar .nav-list .nav-item {\n  flex: 1;\n  cursor: pointer;\n  position: relative;\n  text-align: center;\n  color: rgba(0, 0, 0, 0.6);\n  height: 40px;\n  line-height: 40px;\n}\n.navbar .nav-list .nav-item.active {\n  color: #31c27c;\n}\n.navbar .nav-list .nav-item.active::after {\n  content: \"\";\n  display: block;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  height: 2px;\n  background: #31c27c;\n}\n.qq-slider {\n  width: 100%;\n  overflow: hidden;\n}\n.qq-slider .qq-slider-wrap {\n  display: flex;\n}\n.qq-slider .qq-slider-item {\n  flex-basis: 100%;\n}\n.qq-slider .qq-slider-item > a {\n  display: block;\n}\n.qq-slider .qq-slider-item > a img {\n  width: 100%;\n  display: block;\n}\n.noscroll {\n  overflow: hidden;\n}\n.ellipsis {\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n}\n.radios,\n.playlists {\n  margin: 14px 2px 0 10px;\n}\n.radios .title,\n.playlists .title {\n  color: #000;\n  font-size: 16px;\n  margin-bottom: 11px;\n}\n.radios .list,\n.playlists .list {\n  display: flex;\n  flex-wrap: wrap;\n}\n.radios .list .list-item,\n.playlists .list .list-item {\n  flex: 1;\n  flex-basis: 40%;\n  background: #fff;\n  margin-right: 8px;\n  margin-bottom: 10px;\n}\n.radios .list .list-item .list-media,\n.playlists .list .list-item .list-media {\n  position: relative;\n  margin-bottom: 5px;\n}\n.radios .list .list-item .list-detail,\n.playlists .list .list-item .list-detail {\n  padding: 0 7px 5px;\n}\n.radios .list .list-item .list-title,\n.playlists .list .list-item .list-title {\n  font-size: 14px;\n}\n.radios .list .list-item .icon,\n.playlists .list .list-item .icon {\n  background-repeat: no-repeat;\n  background-size: 24px 60px;\n  background-image: url('images/icon_play.png');\n}\n.radios .list .list-item .icon-play,\n.playlists .list .list-item .icon-play {\n  height: 24px;\n  bottom: 5px;\n  right: 5px;\n  width: 24px;\n  position: absolute;\n  background-position: 0 0;\n}\n.radios .list .list-item img,\n.playlists .list .list-item img {\n  width: 100%;\n  display: block;\n  min-height: 145px;\n}\n.radios .list-title {\n  height: 36px;\n}\n#rec-view .footer {\n  margin: 10px 0 22px;\n}\n.footer-logo {\n  display: block;\n  width: 82px;\n  height: 24px;\n  margin: 0 auto 10px;\n  background-image: url(images/logo_footer.png);\n  background-repeat: no-repeat;\n  background-size: cover;\n  text-indent: -9999px;\n}\n#rank-view {\n  margin: 10px;\n}\n.toplist {\n  margin-bottom: 50px;\n}\n.toplist .top-item {\n  height: 100px;\n  background: #fff;\n  margin-bottom: 10px;\n}\n.toplist .top-item-media {\n  float: left;\n}\n.toplist .top-item-media img {\n  width: 100px;\n  height: 100px;\n  display: block;\n}\n.toplist .top-item-info {\n  position: relative;\n  padding: 7px 10px 6px 15px;\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n}\n.toplist .top-item-info::after {\n  content: '';\n  position: absolute;\n  right: 10px;\n  top: 50%;\n  margin-top: -4px;\n  width: 6px;\n  height: 6px;\n  transform: rotate(315deg);\n  border-right: 1px solid #b2b2b2;\n  border-bottom: 1px solid #b2b2b2;\n}\n.toplist .top-item-title {\n  color: #000;\n  font-size: 16px;\n  font-weight: normal;\n  margin-bottom: 6px;\n}\n.toplist .top-item-list {\n  font-size: 14px;\n  color: rgba(0, 0, 0, 0.5);\n}\n.toplist .top-item-list .top-item-song {\n  height: 20px;\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n}\n.toplist .top-item-list .song-index {\n  float: left;\n  min-width: 10px;\n  text-align: center;\n}\n.toplist .top-item-list .song-name {\n  color: #000;\n  margin-left: 8px;\n  margin-right: 5px;\n}\n.search-bar {\n  display: flex;\n  padding: 10px;\n  background: #f4f4f4;\n}\n.search-bar .input-wrap {\n  flex: 1;\n  position: relative;\n  border-radius: 3px;\n  background: #fff;\n  padding: 8px 12px 8px 35px;\n}\n.search-bar input {\n  flex: 1;\n  outline: 0;\n  height: 20px;\n  line-height: 20px;\n  width: 100%;\n  color: rgba(0, 0, 0, 0.3);\n  border: none;\n  display: block;\n  -webkit-appearance: none;\n  font-size: 14px;\n}\n.search-bar ::-webkit-input-placeholder {\n  color: #ccc;\n}\n.search-bar .icon-search {\n  position: absolute;\n  top: 9px;\n  left: 10px;\n  width: 18px;\n  height: 18px;\n  z-index: 3;\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJlSURBVFhH7ZfRShRRHMb3Jkqzm7wJSrqIIDBxX6C0a62H6C7oqq4ixYreQMmMHkXbjLQeIYgyQuqiyIuotKDt923fyLCszv/MzF5EDnzs2T3/7zffOXNm5myjcXDUOAOtVquJ7qOn6AP6ZamtQ33NGk/ZG8VJJtEaagf1XJ7agwEdRI9zIT7RnkdT6Iz7VaO2flPf51z9I9oDtQQDNIxeGv6Nz9voaBFcNa79bu8LsYp8+/Z75FmYN3w/nwqUB204lFiDqYzd+txlek37RFkQ3pNIjDZaKsXBeMkATfloKUjOBGMMifUbXUzmYVp3oFvJ5j0M8GbNXEtiYtJzRtOru6lwAUfhsIZQdveNR30NTPccaD5sChbCXTD7btDSUCAdmqGpsClYCHPa7CdBSyeQXgEKNBI2BQthnjX7Y9DSCfTTpkNhU7AQ7jGzd4KWvgc67EDbKYH6eclOO9BmSqBsUU+HTcFCwJcdaCVo6Vyy7LZfCJuChbAfONCdoKUTKHsw6iE2FDYWFIqFthxoLImLSZsr3fqzScZ9isUyczWZiXEC6UWoF2LaaHqcDcY4+mHmheRAMmBe8oje8nmqFOQvZwS9N2uxLEcgbUuzDdpGmZnyzLxzGG3yqm1lARxH2VZEUz6DChc6NXoia83I087pRukZyozAjqCHvv6Cf0GL6Ao655MrgNr6TX1bDqF1qO/Xcv7qobymJoA+6xpxfvTd7VVqdxcw7au1h3IwbUfn0DJ6hb6ibbSJVtzX8w9B30JVWQf/QqibVQZYm7drpg5C7TmzuZnSI6JZ2yWoAnKo61UY/5f3Dy7dC4CdAEhQAAAAAElFTkSuQmCC);\n  background-repeat: no-repeat;\n  background-size: cover;\n  text-indent: -999px;\n}\n.search-results .song-item {\n  display: block;\n  position: relative;\n  height: 55px;\n  padding-left: 56px;\n  overflow: hidden;\n  background: #fff;\n  border-bottom: 1px solid #ddd;\n}\n.search-results .song-name {\n  margin: 10px 0 2px;\n  line-height: 18px;\n  font-size: 16px;\n  font-weight: normal;\n  color: #000;\n}\n.search-results .song-artist {\n  color: #808080;\n  font-size: 12px;\n}\n.search-results .icon-music {\n  top: 18px;\n  left: 18px;\n  width: 22px;\n  height: 20px;\n  position: absolute;\n  background-position: 0 0;\n  background-size: 22px 30px;\n  background-repeat: no-repeat;\n  background-image: url(images/search.png);\n}\n.search-loading {\n  height: 55px;\n  text-align: center;\n  position: relative;\n  display: none;\n  align-items: center;\n  justify-content: center;\n}\n.search-loading.show {\n  display: flex;\n}\n.search-loading .loading-icon {\n  top: -2px;\n  width: 20px;\n  height: 20px;\n  position: relative;\n  display: inline-block;\n  vertical-align: middle;\n  background-size: 20px 20px;\n  background-image: url('images/icon_loading.png');\n  animation: loading 1s infinite;\n}\n.search-loading .loading-text {\n  margin-left: 5px;\n}\n.search-loading .loading-done,\n.search-loading .loading-text {\n  color: #808080;\n  font-size: 12px;\n}\n@keyframes loading {\n  from {\n    transform: rotate(0deg);\n  }\n  8.32% {\n    transform: rotate(0deg);\n  }\n  8.33% {\n    transform: rotate(30deg);\n  }\n  16.65% {\n    transform: rotate(30deg);\n  }\n  16.66% {\n    transform: rotate(60deg);\n  }\n  24.99% {\n    transform: rotate(60deg);\n  }\n  25% {\n    transform: rotate(90deg);\n  }\n  33.32% {\n    transform: rotate(90deg);\n  }\n  33.33% {\n    transform: rotate(120deg);\n  }\n  41.65% {\n    transform: rotate(120deg);\n  }\n  41.66% {\n    transform: rotate(150deg);\n  }\n  49.99% {\n    transform: rotate(150deg);\n  }\n  50% {\n    transform: rotate(180deg);\n  }\n  58.32% {\n    transform: rotate(180deg);\n  }\n  58.33% {\n    transform: rotate(210deg);\n  }\n  66.65% {\n    transform: rotate(210deg);\n  }\n  66.66% {\n    transform: rotate(240deg);\n  }\n  74.99% {\n    transform: rotate(240deg);\n  }\n  75% {\n    transform: rotate(270deg);\n  }\n  83.32% {\n    transform: rotate(270deg);\n  }\n  83.33% {\n    transform: rotate(300deg);\n  }\n  91.65% {\n    transform: rotate(300deg);\n  }\n  91.66% {\n    transform: rotate(330deg);\n  }\n  99.99% {\n    transform: rotate(330deg);\n  }\n}\n.js_keyword.tag_s {\n  border-radius: 99px;\n  border: rgba(48, 65, 74, 0.9) 1px solid;\n  text-align: center;\n  padding: 0.1em;\n  color: rgba(48, 65, 74, 0.9);\n  display: inline-block;\n  margin: 5px;\n}\n#player {\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 9;\n  position: fixed;\n  transition: 0.3s;\n  overflow: hidden;\n  opacity: 0;\n  transform: translateY(-100%);\n}\n#player.show {\n  opacity: 1;\n  transform: translateY(0);\n}\n#player .player-container {\n  z-index: 9;\n  height: 100%;\n  position: relative;\n  display: flex;\n  flex-direction: column;\n  background: rgba(0, 0, 0, 0.6);\n}\n#player .player-background {\n  position: absolute;\n  top: 0;\n  bottom: 0;\n  left: 0;\n  z-index: 1;\n  width: 100%;\n  background-size: cover;\n  background-position: bottom center;\n  filter: blur(15px);\n  transform: scale(1.15);\n}\n#player .player-header {\n  display: flex;\n  padding: 15px;\n  align-items: center;\n  background: rgba(0, 0, 0, 0.1);\n}\n#player .player-header .icon-action {\n  width: 44px;\n  height: 44px;\n  border: solid 1px #fff;\n  border-radius: 50%;\n  background: rgba(0, 0, 0, 0.1);\n  opacity: .6;\n  margin-right: 10px;\n  background-image: url(images/sprite_play.png);\n  background-repeat: no-repeat;\n  background-size: 40px 380px;\n}\n#player .player-header .icon-play {\n  background-position: 15px -153px;\n}\n#player .player-header .icon-pause {\n  background-position: 17px -183px;\n}\n#player .player-header .album-cover {\n  width: 80px;\n  height: 80px;\n  display: block;\n  margin-right: 15px;\n}\n#player .player-header .song-info {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n}\n#player .player-header .song-name {\n  height: 30px;\n  font-size: 18px;\n  font-weight: normal;\n  color: #fff;\n}\n#player .player-header .song-artist {\n  height: 21px;\n  font-size: 14px;\n  color: #fff;\n}\n#player .player-lyrics {\n  flex: 1;\n  overflow: hidden;\n  margin: 36px 0 60px 0;\n  color: rgba(255, 255, 255, 0.6);\n  max-height: calc(100%);\n}\n#player .player-lyrics .player-lyrics-lines {\n  overflow: hidden;\n  transition: .5s;\n}\n#player .player-lyrics .player-lyrics-line {\n  height: 42px;\n  line-height: 42px;\n  overflow: hidden;\n  padding: 0 15px;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  font-size: 16px;\n  color: rgba(255, 255, 255, 0.6);\n  text-align: center;\n}\n#player .player-lyrics .active {\n  color: #31c27c;\n}\n#player .player-footer {\n  position: relative;\n}\n#player .player-footer .icon-list {\n  width: 40px;\n  height: 40px;\n  right: 13px;\n  top: -40px;\n  position: absolute;\n  background-image: url(images/sprite_play.png);\n  background-repeat: no-repeat;\n  background-size: 40px 380px;\n  background-position: 8px -250px;\n}\n#player .player-footer .progress {\n  display: flex;\n  align-items: center;\n}\n#player .player-footer .progress-bar {\n  flex: 1;\n  overflow: hidden;\n  background-color: rgba(255, 255, 255, 0.2);\n}\n#player .player-footer .progress-bar .progress-bar-progress {\n  width: 100%;\n  height: 2px;\n  transform: translateX(-100%);\n  background: #31c27c;\n}\n#player .player-footer .progress-time {\n  top: 0;\n  z-index: 1;\n  width: 55px;\n  font-size: 12px;\n  color: #808080;\n  line-height: 40px;\n  text-align: center;\n  letter-spacing: 1px;\n}\n#player .player-footer .actions {\n  height: 65px;\n  margin-top: 10px;\n}\n#player .player-footer .btn-download {\n  position: relative;\n  display: block;\n  height: 45px;\n  line-height: 45px;\n  margin: 0 50px;\n  padding: 0 55px;\n  overflow: hidden;\n  white-space: nowrap;\n  font-size: 20px;\n  color: #fff;\n  border-radius: 999px;\n  background-color: #31c27c;\n  text-align: center;\n  background-image: url(images/sprite_play.png);\n  background-repeat: no-repeat;\n  background-size: 43px 380px;\n  background-position: 6px -321px;\n}\nbody {\n  background: #f4f4f4;\n  font-family: FZLTXIHJW--GB1-0, \"hiragino sans gb\", \"Helvetica Neue\", Helvetica, STHeiTi, Arial;\n}\n.wraper-Head {\n  position: fixed;\n  width: 100%;\n  z-index: 2;\n}\n* {\n  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);\n}\n", ""]);
+exports.push([module.i, "* {\n  box-sizing: border-box;\n}\nbody {\n  margin: 0;\n}\nh1,\nh2,\nh3 {\n  margin: 0;\n  font-weight: normal;\n}\nul,\nol {\n  margin: 0;\n  padding: 0;\n  list-style: none;\n}\na {\n  text-decoration: none;\n}\ni {\n  font-style: normal;\n}\n.navbar {\n  background: rgba(43, 184, 66, 0.384);\n}\n.navbar .nav-list {\n  display: flex;\n  align-items: center;\n}\n.navbar .nav-list .nav-item {\n  font-size: .25rem;\n  flex: 8;\n  cursor: pointer;\n  position: relative;\n  text-align: center;\n  color: #f4f4f4;\n  height: 0.5rem;\n  line-height: 0.5rem;\n}\n.navbar .nav-list .nav-item.active {\n  color: #42ffa4;\n}\n.navbar .nav-list .nav-item.active::after {\n  content: \"\";\n  display: block;\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  height: 2px;\n  background: #42ffa4;\n}\n.navbar .nav-list .menu {\n  flex: 3;\n  height: 0.5rem;\n  float: left;\n  position: relative;\n}\n.navbar .nav-list .menu div {\n  height: 2px;\n  width: 80%;\n  background: white;\n  position: absolute;\n  transform: translate(20%, -50%);\n}\n.navbar .nav-list .menu div:nth-child(1) {\n  top: 30%;\n}\n.navbar .nav-list .menu div:nth-child(2) {\n  top: 50%;\n}\n.navbar .nav-list .menu div:nth-child(3) {\n  top: 70%;\n}\n.navbar .nav-list .addon {\n  margin-right: 10px;\n  flex: 2;\n  float: left;\n  position: relative;\n  height: 30px;\n}\n.navbar .nav-list .addon > div:first-child {\n  width: 26px;\n  height: 2px;\n  background: white;\n  position: absolute;\n  top: 50%;\n  left: 2px;\n}\n.navbar .nav-list .addon > div:last-child {\n  width: 2.5px;\n  height: 26px;\n  background: white;\n  position: absolute;\n  left: 14px;\n  top: 3px;\n}\n.navbar .search > input {\n  width: 98%;\n  margin: 2px 1%;\n  text-align: center;\n  background-color: white;\n  border: 0px;\n}\n.slider {\n  position: fixed;\n  bottom: 0;\n  top: 0;\n  width: 80%;\n  z-index: 2;\n  background: white;\n}\n.noscroll {\n  overflow: hidden;\n}\n.ellipsis {\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n}\n.radios,\n.playlists {\n  margin: 14px 2px 0 10px;\n}\n.radios .title,\n.playlists .title {\n  color: #000;\n  font-size: 16px;\n  margin-bottom: 11px;\n}\n.radios .list,\n.playlists .list {\n  display: flex;\n  flex-wrap: wrap;\n}\n.radios .list .list-item,\n.playlists .list .list-item {\n  flex: 1;\n  flex-basis: 40%;\n  background: #fff;\n  margin-right: 8px;\n  margin-bottom: 10px;\n}\n.radios .list .list-item .list-media,\n.playlists .list .list-item .list-media {\n  position: relative;\n  margin-bottom: 5px;\n}\n.radios .list .list-item .list-detail,\n.playlists .list .list-item .list-detail {\n  padding: 0 7px 5px;\n}\n.radios .list .list-item .list-title,\n.playlists .list .list-item .list-title {\n  font-size: 14px;\n}\n.radios .list .list-item .icon,\n.playlists .list .list-item .icon {\n  background-repeat: no-repeat;\n  background-size: 24px 60px;\n  background-image: url('images/icon_play.png');\n}\n.radios .list .list-item .icon-play,\n.playlists .list .list-item .icon-play {\n  height: 24px;\n  bottom: 5px;\n  right: 5px;\n  width: 24px;\n  position: absolute;\n  background-position: 0 0;\n}\n.radios .list .list-item img,\n.playlists .list .list-item img {\n  width: 100%;\n  display: block;\n  min-height: 145px;\n}\n.radios .list-title {\n  height: 36px;\n}\n#rec-view .footer {\n  margin: 10px 0 22px;\n}\n.footer-logo {\n  display: block;\n  width: 82px;\n  height: 24px;\n  margin: 0 auto 10px;\n  background-image: url(images/logo_footer.png);\n  background-repeat: no-repeat;\n  background-size: cover;\n  text-indent: -9999px;\n}\n#rank-view {\n  margin: 10px;\n}\n.toplist {\n  margin-bottom: 50px;\n}\n.toplist .top-item {\n  height: 100px;\n  background: #fff;\n  margin-bottom: 10px;\n}\n.toplist .top-item-media {\n  float: left;\n}\n.toplist .top-item-media img {\n  width: 100px;\n  height: 100px;\n  display: block;\n}\n.toplist .top-item-info {\n  position: relative;\n  padding: 7px 10px 6px 15px;\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n}\n.toplist .top-item-info::after {\n  content: '';\n  position: absolute;\n  right: 10px;\n  top: 50%;\n  margin-top: -4px;\n  width: 6px;\n  height: 6px;\n  transform: rotate(315deg);\n  border-right: 1px solid #b2b2b2;\n  border-bottom: 1px solid #b2b2b2;\n}\n.toplist .top-item-title {\n  color: #000;\n  font-size: 16px;\n  font-weight: normal;\n  margin-bottom: 6px;\n}\n.toplist .top-item-list {\n  font-size: 14px;\n  color: rgba(0, 0, 0, 0.5);\n}\n.toplist .top-item-list .top-item-song {\n  height: 20px;\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n}\n.toplist .top-item-list .song-index {\n  float: left;\n  min-width: 10px;\n  text-align: center;\n}\n.toplist .top-item-list .song-name {\n  color: #000;\n  margin-left: 8px;\n  margin-right: 5px;\n}\n.search-bar {\n  display: flex;\n  padding: .12rem 10px;\n  background: #f4f4f4;\n  height: .7rem;\n}\n.search-bar .input-wrap {\n  flex: 1;\n  position: relative;\n  border-radius: 3px;\n  background: #fff;\n  padding: .06rem 12px .06rem 35px;\n}\n.search-bar input {\n  flex: 1;\n  width: 100%;\n  color: rgba(0, 0, 0, 0.3);\n  border: none;\n  display: block;\n  -webkit-appearance: none;\n  font-size: 16px;\n}\n.search-bar ::-webkit-input-placeholder {\n  color: #ccc;\n}\n.search-bar .icon-search {\n  position: absolute;\n  top: 0.1rem;\n  left: 10px;\n  width: 18px;\n  height: 0.32rem;\n  z-index: 3;\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJlSURBVFhH7ZfRShRRHMb3Jkqzm7wJSrqIIDBxX6C0a62H6C7oqq4ixYreQMmMHkXbjLQeIYgyQuqiyIuotKDt923fyLCszv/MzF5EDnzs2T3/7zffOXNm5myjcXDUOAOtVquJ7qOn6AP6ZamtQ33NGk/ZG8VJJtEaagf1XJ7agwEdRI9zIT7RnkdT6Iz7VaO2flPf51z9I9oDtQQDNIxeGv6Nz9voaBFcNa79bu8LsYp8+/Z75FmYN3w/nwqUB204lFiDqYzd+txlek37RFkQ3pNIjDZaKsXBeMkATfloKUjOBGMMifUbXUzmYVp3oFvJ5j0M8GbNXEtiYtJzRtOru6lwAUfhsIZQdveNR30NTPccaD5sChbCXTD7btDSUCAdmqGpsClYCHPa7CdBSyeQXgEKNBI2BQthnjX7Y9DSCfTTpkNhU7AQ7jGzd4KWvgc67EDbKYH6eclOO9BmSqBsUU+HTcFCwJcdaCVo6Vyy7LZfCJuChbAfONCdoKUTKHsw6iE2FDYWFIqFthxoLImLSZsr3fqzScZ9isUyczWZiXEC6UWoF2LaaHqcDcY4+mHmheRAMmBe8oje8nmqFOQvZwS9N2uxLEcgbUuzDdpGmZnyzLxzGG3yqm1lARxH2VZEUz6DChc6NXoia83I087pRukZyozAjqCHvv6Cf0GL6Ao655MrgNr6TX1bDqF1qO/Xcv7qobymJoA+6xpxfvTd7VVqdxcw7au1h3IwbUfn0DJ6hb6ibbSJVtzX8w9B30JVWQf/QqibVQZYm7drpg5C7TmzuZnSI6JZ2yWoAnKo61UY/5f3Dy7dC4CdAEhQAAAAAElFTkSuQmCC);\n  background-repeat: no-repeat;\n  background-size: cover;\n}\n.search-container {\n  max-height: 8rem;\n  overflow: auto;\n}\n.search-container .search-results .song-item {\n  display: block;\n  position: relative;\n  height: 55px;\n  padding-left: 56px;\n  overflow: hidden;\n  background: #fff;\n  border-bottom: 1px solid #ddd;\n}\n.search-container .search-results .song-name {\n  margin: 10px 0 2px;\n  line-height: 18px;\n  font-size: 16px;\n  font-weight: normal;\n  color: #000;\n}\n.search-container .search-results .song-artist {\n  color: #808080;\n  font-size: 12px;\n}\n.search-container .search-results .icon-music {\n  top: 18px;\n  left: 18px;\n  width: 22px;\n  height: 20px;\n  position: absolute;\n  background-position: 0 0;\n  background-size: 22px 30px;\n  background-repeat: no-repeat;\n  background-image: url(images/search.png);\n}\n.search-container .search-loading {\n  height: 55px;\n  text-align: center;\n  position: relative;\n  display: none;\n  align-items: center;\n  justify-content: center;\n}\n.search-container .search-loading.show {\n  display: flex;\n}\n.search-container .search-loading .loading-icon {\n  top: -2px;\n  width: 20px;\n  height: 20px;\n  position: relative;\n  display: inline-block;\n  vertical-align: middle;\n  background-size: 20px 20px;\n  background-image: url('images/icon_loading.png');\n  animation: loading 1s infinite;\n}\n.search-container .search-loading .loading-text {\n  margin-left: 5px;\n}\n.search-container .search-loading .loading-done,\n.search-container .search-loading .loading-text {\n  color: #808080;\n  font-size: 12px;\n}\n@keyframes loading {\n  from {\n    transform: rotate(0deg);\n  }\n  8.32% {\n    transform: rotate(0deg);\n  }\n  8.33% {\n    transform: rotate(30deg);\n  }\n  16.65% {\n    transform: rotate(30deg);\n  }\n  16.66% {\n    transform: rotate(60deg);\n  }\n  24.99% {\n    transform: rotate(60deg);\n  }\n  25% {\n    transform: rotate(90deg);\n  }\n  33.32% {\n    transform: rotate(90deg);\n  }\n  33.33% {\n    transform: rotate(120deg);\n  }\n  41.65% {\n    transform: rotate(120deg);\n  }\n  41.66% {\n    transform: rotate(150deg);\n  }\n  49.99% {\n    transform: rotate(150deg);\n  }\n  50% {\n    transform: rotate(180deg);\n  }\n  58.32% {\n    transform: rotate(180deg);\n  }\n  58.33% {\n    transform: rotate(210deg);\n  }\n  66.65% {\n    transform: rotate(210deg);\n  }\n  66.66% {\n    transform: rotate(240deg);\n  }\n  74.99% {\n    transform: rotate(240deg);\n  }\n  75% {\n    transform: rotate(270deg);\n  }\n  83.32% {\n    transform: rotate(270deg);\n  }\n  83.33% {\n    transform: rotate(300deg);\n  }\n  91.65% {\n    transform: rotate(300deg);\n  }\n  91.66% {\n    transform: rotate(330deg);\n  }\n  99.99% {\n    transform: rotate(330deg);\n  }\n}\n.search-container .js_keyword.tag_s {\n  border-radius: 99px;\n  border: rgba(48, 65, 74, 0.9) 1px solid;\n  text-align: center;\n  padding: 0.1em;\n  color: rgba(48, 65, 74, 0.9);\n  display: inline-block;\n  margin: 5px;\n}\n#player {\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 9;\n  position: fixed;\n  transition: 0.3s;\n  overflow: hidden;\n  opacity: 0;\n  transform: translateY(-100%);\n}\n#player.show {\n  opacity: 1;\n  transform: translateY(0);\n}\n#player .player-container {\n  z-index: 9;\n  height: 100%;\n  position: relative;\n  display: flex;\n  flex-direction: column;\n  background: rgba(0, 0, 0, 0.6);\n}\n#player .player-background {\n  position: absolute;\n  top: 0;\n  bottom: 0;\n  left: 0;\n  z-index: 1;\n  width: 100%;\n  background-size: cover;\n  background-position: bottom center;\n  filter: blur(15px);\n  transform: scale(1.15);\n}\n#player .player-header {\n  display: flex;\n  padding: 15px;\n  align-items: center;\n  background: rgba(0, 0, 0, 0.1);\n}\n#player .player-header .icon-action {\n  width: 44px;\n  height: 44px;\n  border: solid 1px #fff;\n  border-radius: 50%;\n  background: rgba(0, 0, 0, 0.1);\n  opacity: .6;\n  margin-right: 10px;\n  background-image: url(images/sprite_play.png);\n  background-repeat: no-repeat;\n  background-size: 40px 380px;\n}\n#player .player-header .icon-play {\n  background-position: 15px -153px;\n}\n#player .player-header .icon-pause {\n  background-position: 17px -183px;\n}\n#player .player-header .album-cover {\n  width: 80px;\n  height: 80px;\n  display: block;\n  margin-right: 15px;\n}\n#player .player-header .song-info {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n}\n#player .player-header .song-name {\n  height: 30px;\n  font-size: 18px;\n  font-weight: normal;\n  color: #fff;\n}\n#player .player-header .song-artist {\n  height: 21px;\n  font-size: 14px;\n  color: #fff;\n}\n#player .player-lyrics {\n  flex: 1;\n  overflow: hidden;\n  margin: 36px 0 60px 0;\n  color: rgba(255, 255, 255, 0.6);\n  max-height: calc(100%);\n}\n#player .player-lyrics .player-lyrics-lines {\n  overflow: hidden;\n  transition: .5s;\n}\n#player .player-lyrics .player-lyrics-line {\n  height: 42px;\n  line-height: 42px;\n  overflow: hidden;\n  padding: 0 15px;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  font-size: 16px;\n  color: rgba(255, 255, 255, 0.6);\n  text-align: center;\n}\n#player .player-lyrics .active {\n  color: #42ffa4;\n}\n#player .player-footer {\n  position: relative;\n}\n#player .player-footer .icon-list {\n  width: 40px;\n  height: 40px;\n  right: 13px;\n  top: -40px;\n  position: absolute;\n  background-image: url(images/sprite_play.png);\n  background-repeat: no-repeat;\n  background-size: 40px 380px;\n  background-position: 8px -250px;\n}\n#player .player-footer .progress {\n  display: flex;\n  align-items: center;\n}\n#player .player-footer .progress-bar {\n  flex: 1;\n  overflow: hidden;\n  background-color: rgba(255, 255, 255, 0.2);\n}\n#player .player-footer .progress-bar .progress-bar-progress {\n  width: 100%;\n  height: 2px;\n  transform: translateX(-100%);\n  background: #42ffa4;\n}\n#player .player-footer .progress-time {\n  top: 0;\n  z-index: 1;\n  width: 55px;\n  font-size: 12px;\n  color: #808080;\n  line-height: 40px;\n  text-align: center;\n  letter-spacing: 1px;\n}\n#player .player-footer .actions {\n  height: 65px;\n  margin-top: 10px;\n}\n#player .player-footer .btn-download {\n  position: relative;\n  display: block;\n  height: 45px;\n  line-height: 45px;\n  margin: 0 50px;\n  padding: 0 55px;\n  overflow: hidden;\n  white-space: nowrap;\n  font-size: 20px;\n  color: #fff;\n  border-radius: 999px;\n  background-color: #42ffa4;\n  text-align: center;\n  background-image: url(images/sprite_play.png);\n  background-repeat: no-repeat;\n  background-size: 43px 380px;\n  background-position: 6px -321px;\n}\n.MyMusic {\n  margin-top: 5px;\n}\n.MyMusic .features {\n  margin-bottom: 10px;\n  display: flex;\n  flex-wrap: wrap;\n  justify-content: space-between;\n}\n.MyMusic .features li {\n  min-width: 30%;\n  text-align: center;\n}\n.MyMusic .features li div:first-child {\n  border: 1px solid red;\n  height: 90px;\n  width: 100%;\n}\n.MyMusic .Personalvideo,\n.MyMusic .Sportsvideo {\n  border: 1px solid red;\n}\n.MyMusic .Personalvideo .img,\n.MyMusic .Sportsvideo .img {\n  height: 80px;\n  width: 80px;\n  float: left;\n  background: rgba(71, 115, 236, 0.466);\n}\n.MyMusic .Personalvideo .clearfload,\n.MyMusic .Sportsvideo .clearfload {\n  clear: both;\n}\n.MyMusic .self header {\n  text-align: center;\n}\n.MyMusic .self .template {\n  border: 1px solid red;\n}\n.MyMusic .self .template .img {\n  height: 80px;\n  width: 80px;\n  float: left;\n  background: rgba(71, 115, 236, 0.466);\n}\n.MyMusic .self .template .clearfload {\n  clear: both;\n}\n.MyMusic .radios,\n.MyMusic .playlists {\n  margin: 14px 2px 0 10px;\n}\n.MyMusic .radios .title,\n.MyMusic .playlists .title {\n  color: #000;\n  font-size: 16px;\n  margin-bottom: 11px;\n}\n.MyMusic .radios .list,\n.MyMusic .playlists .list {\n  display: flex;\n  flex-wrap: wrap;\n}\n.MyMusic .radios .list .list-item,\n.MyMusic .playlists .list .list-item {\n  flex: 1;\n  flex-basis: 40%;\n  background: #fff;\n  margin-right: 8px;\n  margin-bottom: 10px;\n}\n.MyMusic .radios .list .list-item .list-media,\n.MyMusic .playlists .list .list-item .list-media {\n  position: relative;\n  margin-bottom: 5px;\n}\n.MyMusic .radios .list .list-item .list-detail,\n.MyMusic .playlists .list .list-item .list-detail {\n  padding: 0 7px 5px;\n}\n.MyMusic .radios .list .list-item .list-title,\n.MyMusic .playlists .list .list-item .list-title {\n  font-size: 14px;\n}\n.MyMusic .radios .list .list-item .icon,\n.MyMusic .playlists .list .list-item .icon {\n  background-repeat: no-repeat;\n  background-size: 24px 60px;\n  background-image: url('images/icon_play.png');\n}\n.MyMusic .radios .list .list-item .icon-play,\n.MyMusic .playlists .list .list-item .icon-play {\n  height: 24px;\n  bottom: 5px;\n  right: 5px;\n  width: 24px;\n  position: absolute;\n  background-position: 0 0;\n}\n.MyMusic .radios .list .list-item img,\n.MyMusic .playlists .list .list-item img {\n  width: 100%;\n  display: block;\n  min-height: 145px;\n}\n.MyMusic .radios .list-title {\n  height: 36px;\n}\n.MyMusic #rec-view .footer {\n  margin: 10px 0 22px;\n}\n.MyMusic .footer-logo {\n  display: block;\n  width: 82px;\n  height: 24px;\n  margin: 0 auto 10px;\n  background-image: url(images/logo_footer.png);\n  background-repeat: no-repeat;\n  background-size: cover;\n  text-indent: -9999px;\n}\n.MusicHall .carousel {\n  position: relative;\n  width: 100%;\n  height: 206px;\n  overflow: hidden;\n}\n.MusicHall .carousel li {\n  list-style: none;\n}\n.MusicHall .carousel a {\n  text-decoration: none;\n}\n.MusicHall .carousel .img-ct {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n}\n.MusicHall .carousel .img-ct a {\n  display: block;\n  width: 100%;\n  height: 100%;\n}\n.MusicHall .carousel .img-ct img {\n  width: 100%;\n  height: 206px;\n}\n.MusicHall .carousel .img-ct:after {\n  content: ' ';\n  display: block;\n  clear: both;\n}\n.MusicHall .carousel .img-ct li {\n  width: 100%;\n  position: absolute;\n  opacity: 0;\n  transition: opacity 0.8s;\n  z-index: 0;\n}\n.MusicHall .carousel .img-ct li.active {\n  opacity: 1;\n  z-index: 1;\n}\n.MusicHall .carousel .arrow {\n  position: absolute;\n  top: 50%;\n  margin-top: -15px;\n  width: 30px;\n  height: 30px;\n  line-height: 30px;\n  text-align: center;\n  background: #4E443C;\n  color: #fff;\n  border-radius: 30px;\n  box-shadow: 0 0 2px #999;\n  opacity: 0.8;\n}\n.MusicHall .carousel .arrow:hover {\n  opacity: 1;\n}\n.MusicHall .carousel ul.bullet {\n  position: absolute;\n  bottom: 10px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 1;\n}\n.MusicHall .carousel ul.bullet li {\n  width: 16px;\n  height: 4px;\n  border-radius: 2px;\n  background: #fff;\n  display: inline-block;\n  cursor: pointer;\n  margin-right: 3px;\n}\n.MusicHall .carousel ul.bullet li.active {\n  background: #666;\n}\n.MusicHall .musicList {\n  font-size: .15rem;\n  display: flex;\n  flex-wrap: wrap;\n  justify-content: space-between;\n}\n.MusicHall .musicList li {\n  width: 30%;\n  height: 20vw;\n}\n.MusicHall .broadCast .title {\n  font-size: .35rem;\n}\n.MusicHall .broadCast .content {\n  display: flex;\n  flex-wrap: nowrap;\n  justify-content: space-between;\n}\n.MusicHall .broadCast .content .list-media {\n  width: 48%;\n}\n.MusicHall .broadCast .content .list-media img {\n  border: 1px solid red;\n  width: 100%;\n}\n.MusicHall .hotSongList > .title {\n  font-size: .35rem;\n}\n.MusicHall .hotSongList > .content {\n  display: flex;\n  flex-wrap: wrap;\n  justify-content: space-between;\n}\n.MusicHall .hotSongList > .content > .list-item {\n  width: 48%;\n}\n.MusicHall .hotSongList > .content > .list-item > .list-media {\n  width: 100%;\n  height: 150px;\n  border: 1px solid red;\n}\n.MusicHall .hotSongList > .content > .list-item > .list-media > img {\n  width: 100%;\n  height: 100%;\n}\n.miniPlayer {\n  position: fixed;\n  display: flex;\n  height: .8rem;\n  border: 1px solid green;\n  background: rgba(176, 247, 208, 0.781);\n  z-index: 2;\n  right: 0;\n  left: 0;\n  bottom: 0;\n}\n.miniPlayer .songimg {\n  height: 100%;\n  flex: 1;\n  border: 1px red solid;\n}\n.miniPlayer .playericon {\n  height: 100%;\n  flex: 1;\n}\n.miniPlayer .song-message {\n  flex: 5;\n}\n.miniPlayer .songList {\n  height: 100%;\n  flex: 1;\n}\n.miniPlayer .icon-action {\n  margin: 0 50%;\n  transform: translate(-50%, 0);\n  display: block;\n  width: 44px;\n  height: 44px;\n  border: solid 1px #fff;\n  border-radius: 50%;\n  background: rgba(0, 0, 0, 0.1);\n  opacity: .6;\n  margin-right: 10px;\n  background-image: url(images/sprite_play.png);\n  background-repeat: no-repeat;\n  background-size: 40px 380px;\n}\n.miniPlayer .icon-play {\n  background-position: 15px -153px;\n}\n.miniPlayer .icon-pause {\n  background-position: 17px -183px;\n}\n.miniPlayer .icon-list {\n  width: 40px;\n  height: 40px;\n  right: 13px;\n  background-image: url(images/sprite_play.png);\n  background-repeat: no-repeat;\n  background-size: 40px 380px;\n  background-position: 8px -322px;\n}\n.MusicPlayer {\n  position: fixed;\n  z-index: 2;\n  top: 0;\n  bottom: 0;\n  right: 0;\n  left: 0;\n  background: rgba(93, 112, 106, 0.788);\n  transform: translate(0, -100%);\n}\nbody {\n  background: #f4f4f4;\n  font-family: FZLTXIHJW--GB1-0, \"hiragino sans gb\", \"Helvetica Neue\", Helvetica, STHeiTi, Arial;\n}\n.wraper-Head {\n  position: fixed;\n  width: 100%;\n  z-index: 2;\n}\n.placeholder {\n  height: 1.2rem;\n}\n.placeholder.bottom {\n  height: .8rem;\n}\n* {\n  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);\n}\n*:not(html) {\n  font-size: 16px;\n}\n", ""]);
 
 // exports
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports) {
 
 /*
@@ -1127,7 +1364,7 @@ function toComment(sourceMap) {
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -1183,7 +1420,7 @@ var singleton = null;
 var	singletonCounter = 0;
 var	stylesInsertedAtTop = [];
 
-var	fixUrls = __webpack_require__(16);
+var	fixUrls = __webpack_require__(17);
 
 module.exports = function(list, options) {
 	if (typeof DEBUG !== "undefined" && DEBUG) {
@@ -1499,7 +1736,7 @@ function updateLink (link, options, obj) {
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports) {
 
 

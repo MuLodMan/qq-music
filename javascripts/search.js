@@ -3,7 +3,7 @@ import {HotSearch_URL} from './constants'
  class Search {
   constructor(el) {
     this.$el = el
-    this.$input = this.$el.querySelector('#search')
+    this.$input = document.getElementById('search')
     this.$songs = this.$el.querySelector('.song-list')
     this.page = 1
     this.songs = {}
@@ -11,20 +11,22 @@ import {HotSearch_URL} from './constants'
     this.perpage = 20
     this.nomore = false
     this.fetching = false
-    this.onscroll = this.onScroll.bind(this)
-    window.addEventListener('scroll', this.onscroll)
+    this.$el.addEventListener('scroll', this.onScroll.bind(this))
   }
 
-  onKeyUp(event) {
+  onChanged(event) {
     let keyword = event.target.value.trim(),
         searchInput = document.querySelector('.result_tags');
     if (!keyword) return this.reset()
     this.search(keyword)
+    return true;
   }
 
   onScroll(event) {
-    if (this.nomore) return window.removeEventListener('scroll', this.onscroll)
-    if (pageYOffset + document.documentElement.clientHeight > document.body.scrollHeight - 50) {
+    event.stopPropagation()
+    if(!this.keyword) return
+    if (this.nomore) return this.$el.removeEventListener('scroll', this.onScroll)
+    if (getComputedStyle(this.$songs.lastElementChild).paddingTop<getComputedStyle(this.$songs).height) {
       this.search(this.keyword, this.page + 1)
     }
   }
@@ -35,6 +37,7 @@ import {HotSearch_URL} from './constants'
     this.keyword = ''
     this.nomore = false
     this.$songs.innerHTML = ''
+    return false;
   }
   search(keyword, page) {
     if (this.keyword === keyword && this.songs[page || this.page]) return
@@ -65,7 +68,7 @@ import {HotSearch_URL} from './constants'
           <div class="song-name ellipsis">${song.songname}</div>
           <div class="song-artist ellipsis">${artist}</div>
         </a>`}).join('')
-    this.$songs.insertAdjacentHTML('beforeend', html)
+    this.$songs.innerHTML+=html
   }
 
   loading() {
@@ -86,26 +89,26 @@ import {HotSearch_URL} from './constants'
   }
   
 }
-class hotSearch{
-  constructor(){
-    this.listHtml = document.querySelector('.result_tags')
-    this.getResult()
-  }
-  getResult(){
-    let req = new XMLHttpRequest()
-    let that =this;
-    req.open('get',HotSearch_URL)
-    req.send()
-    req.addEventListener("load",function(e){
-      // console.log(e)
-     let results = JSON.parse(e.target.response)
-     console.log(results)
-     let htmlTemp = results.data.hotkey.map(function(e){
-        return `<a href="javascript:;" class="js_keyword tag_s">${e.k} </a>`
-     }).join('')
-     that.listHtml.innerHTML = htmlTemp;
-    })
-  }
+// class hotSearch{
+//   constructor(){
+//     this.listHtml = document.querySelector('.result_tags')
+//     this.getResult()
+//   }
+//   getResult(){
+//     let req = new XMLHttpRequest()
+//     let that =this;
+//     req.open('get',HotSearch_URL)
+//     req.send()
+//     req.addEventListener("load",function(e){
+//       // console.log(e)
+//      let results = JSON.parse(e.target.response)
+//      console.log(results)
+//      let htmlTemp = results.data.hotkey.map(function(e){
+//         return `<a href="javascript:;" class="js_keyword tag_s">${e.k} </a>`
+//      }).join('')
+//      that.listHtml.innerHTML = htmlTemp;
+//     })
+//   }
   
-}
-export {Search,hotSearch}
+// }
+export {Search}

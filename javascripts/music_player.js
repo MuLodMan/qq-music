@@ -2,6 +2,34 @@ import { ProgressBar } from './progress_bar.js'
 import { LyricsPlayer } from './lyrics_player.js'
 import { songUrl, lyricsUrl, albumCoverUrl } from './helpers.js'
 
+class MiniPlayer{
+  constructor(el){
+    this.$el = el;
+  }
+  showMessage(imgUrl,Title){
+    this.$el.querySelector('.songimg').style.background = `url(${imgUrl}) 0/cover`
+    this.$el.querySelector('.song-message>.songtitle').textContent = Title;
+  }
+  PlayerHandler(e){
+   switch(e.target.className){
+    case "icon-action icon-play": 
+    if(!this.$el.querySelector('.icon-action.icon-play'))return;
+    this.$el.querySelector('.icon-action.icon-play').classList.replace('icon-play','icon-pause')
+    this.showlyrics()
+    break;
+    case "icon-action icon-pause": 
+    this.$el.querySelector('.icon-action.icon-pause').classList.replace('icon-pause','icon-play')
+    this.showlyrics()
+    break;
+    case "songList":
+    break;
+    default: 
+   } 
+  }
+  showlyrics(){
+
+  }
+}
 export class MusicPlayer {
   constructor(el) {
     this.$el = el
@@ -10,6 +38,10 @@ export class MusicPlayer {
     this.lyrics = new LyricsPlayer(this.$el.querySelector('.player-lyrics'), this.$audio)
     this.progress = new ProgressBar(this.$el.querySelector('.progress'))
     this.fetching = false
+    this.miniPlayer = new MiniPlayer(document.querySelector('.miniPlayer'))
+    let miniSelector = this.miniPlayer.$el.querySelector.bind(this.miniPlayer.$el)
+    miniSelector('.songimg').onclick = this.show.bind(this)
+    miniSelector('.icon-action').onclick = this.onOff.bind(this)
   }
 
   createAudio() {
@@ -44,6 +76,7 @@ export class MusicPlayer {
     this.$audio.play()
     this.lyrics.start()
     this.progress.start()
+    this.miniPlayer.PlayerHandler(event)
     event.target.classList.add('icon-pause')
     event.target.classList.remove('icon-play')
   }
@@ -52,6 +85,7 @@ export class MusicPlayer {
     this.$audio.pause()
     this.lyrics.pause()
     this.progress.pause()
+    this.miniPlayer.PlayerHandler(event)
     event.target.classList.add('icon-play')
     event.target.classList.remove('icon-pause')
   }
@@ -66,15 +100,14 @@ export class MusicPlayer {
   }
   play(options = {}) {
     if (!options) return
-    
-    this.$el.querySelector('.song-name').innerText = options.songname
-    this.$el.querySelector('.song-artist').innerText = options.artist
+    let coverUrl = albumCoverUrl(options.albummid),
+        artist = options.artist;
+    this.$el.querySelector('.song-name').textContent = options.songname
+    this.$el.querySelector('.song-artist').textContent= artist
     this.progress.reset(options.duration)
-    
-    let coverUrl = albumCoverUrl(options.albummid)
     this.$el.querySelector('.album-cover').src = coverUrl
     this.$el.querySelector('.player-background').style.backgroundImage = `url(${coverUrl})`
-
+    this.miniPlayer.showMessage(coverUrl,artist)
     if (options.songid) {
       if (this.songid !== options.songid) {
         this.$el.querySelector('.icon-action').className = 'icon-action icon-play'
