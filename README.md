@@ -8,4 +8,5 @@
 | 搜索   | `/search`  | `keyword` 关键字 `page` 第几页，默认 `1` | `/search?keyword=李荣浩` |
 | 歌词   | `/lyrics`  | `id` 歌曲 id                          | `/lyrics?id=102367085`   |
 | 播放   |                                                    |可以调整进度条             |
- 
+距离原生还有很长一段路要走,我先折腾react和nodejs去了，改天再回来..
+
