@@ -821,8 +821,8 @@ var MusicPlayer = exports.MusicPlayer = function () {
   }, {
     key: 'contains',
     value: function contains(node) {
-      if ($el.contains) {
-        return $el.contains(node);
+      if (this.$el.contains) {
+        return this.$el.contains(node);
       }
       var $el = this.$el,
           queue = [$el],

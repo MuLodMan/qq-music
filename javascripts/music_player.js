@@ -142,8 +142,8 @@ export class MusicPlayer {
     document.body.classList.remove('noscroll')
   }
   contains(node) {
-    if($el.contains){
-      return $el.contains(node) 
+    if(this.$el.contains){
+      return this.$el.contains(node) 
     }
     let $el = this.$el,
     queue = [$el],
